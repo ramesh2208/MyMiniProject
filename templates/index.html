@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Python Calculator</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+    <div class="calculator">
+        <h1>Python Calculator</h1>
+        <input type="text" id="display" disabled>
+        <div class="buttons">
+            <button onclick="appendToDisplay('9')">9</button>
+            <button onclick="appendToDisplay('8')">8</button>
+            <button onclick="appendToDisplay('7')">7</button>
+            <button class="backspace" onclick="backspace()">CS</button>
+
+            <button onclick="appendToDisplay('6')">6</button>
+            <button onclick="appendToDisplay('5')">5</button>
+            <button onclick="appendToDisplay('4')">4</button>
+            <button onclick="appendToDisplay('+')">+</button>
+            <button onclick="appendToDisplay('3')">3</button>
+
+            <button onclick="appendToDisplay('2')">2</button>
+            <button onclick="appendToDisplay('1')">1</button>
+            <button onclick="appendToDisplay('-')">-</button>
+            <button onclick="appendToDisplay('00')">00</button>
+
+            <button onclick="appendToDisplay('0')">0</button>
+            <button onclick="appendToDisplay('/')">/</button>
+            <button onclick="appendToDisplay('*')">*</button>
+
+            <button onclick="appendToDisplay('(')">(</button>
+            <button onclick="appendToDisplay('√')">√</button>
+            <button onclick="appendToDisplay(')')">)</button>
+            <button onclick="appendToDisplay('%')">%</button>
+
+            <button onclick="appendToDisplay('.')">.</button>
+
+            <button class="clear" onclick="clearDisplay()">Clear</button>
+            <button onclick="calculateResult()">=</button>
+        </div>
+    </div>
+
+    <script>
+        function appendToDisplay(value) {
+            let display = document.getElementById('display');
+            
+            // Prevent consecutive operators (e.g., "++", "--", etc.)
+            if ("+-*/%".includes(value) && "+-*/%".includes(display.value.slice(-1))) {
+                return;
+            }
+
+            display.value += value;
+        }
+
+        function clearDisplay() {
+            document.getElementById('display').value = '';
+        }
+
+        function backspace() {
+            let display = document.getElementById('display');
+            display.value = display.value.slice(0, -1);
+        }
+        function calculateResult() {
+    let expression = document.getElementById('display').value;
+
+    // Convert percentage (%) to division by 100
+    expression = expression.replace(/(\d+(\.\d+)*)%/g, "($1/100)");
+
+    // expression = expression.replace(/(\d+(\.\d+)?)\s*\*\s*\((\d+(\.\d+)?)\/100\)/g, "($1 * ($3 / 100))");
+    // expression = expression.replace(/(\d+(\.\d+)?)\s*\/\s*\((\d+(\.\d+)?)\/100\)/g, "($1 / ($3 / 100))");
+    // expression = expression.replace(/(\d+(\.\d+)?)\s*\+\s*\((\d+(\.\d+)?)\/100\)/g, "($1 + ($1 * ($3 / 100)))");
+    // expression = expression.replace(/(\d+(\.\d+)?)\s*-\s*\((\d+(\.\d+)?)\/100\)/g, "($1 - ($1 * ($3 / 100)))");
+
+    // Convert square root symbol (√) to a function call math.sqrt()
+    expression = expression.replace(/√(\d+(\.\d+)*)/g, "math.sqrt($1)");
+
+    // Send the modified expression to Flask for evaluation
+    $.ajax({
+        url: '/calculate',
+        method: 'POST',
+        data: { expression: expression },
+        success: function(response) {
+            if (response.result) {
+                document.getElementById('display').value = response.result;
+            } else if (response.error) {
+                document.getElementById('display').value = response.error;
+            }
+        },
+        error: function() {
+            document.getElementById('display').value = "Error";
+        }
+    });
+}
+    </script>
+</body>
+</html>
